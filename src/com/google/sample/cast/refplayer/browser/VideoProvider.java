@@ -164,7 +164,7 @@ public class VideoProvider {
             if (artist != null) {
                 if (multipleArtists) {
                     if (i == LAST_ITEM_IDX) {
-                        result.append("and " + artist);
+                        result.append(" and " + artist);
                     } else {
                         result.append(artist);
                         // it's a preeceding item. Append a comma if have more than 2 items
