@@ -50,7 +50,7 @@ public class VideoProvider {
     private static String TAG_VIDEO_ID = "isrc";
     private static String TAG_TITLE = "title";
     private static String TAG_RELEASE_DATE = "releaseDate";
-    private static String TAG_THUMBNAIL = "thumbnailUrl";
+    private static String TAG_IMAGE_URL = "thumbnailUrl";
     private static String TAG_ARTISTS = "artists";
     private static String TAG_ARTIST_NAME = "name";
 
@@ -132,7 +132,9 @@ public class VideoProvider {
                     continue;
                 }
                 String releaseDateString = video.getString(TAG_RELEASE_DATE);
-                String thumbnailUrl = video.getString(TAG_THUMBNAIL);
+                String imageUrl = video.getString(TAG_IMAGE_URL);// + "?width=520&height=800";
+                String thumbnailUrl = video.getString(TAG_IMAGE_URL) + "?width=480&height=270";
+
                 String videoUrl = getVideoURL(vid);
                 String title = video.getString(TAG_TITLE);
 
@@ -142,7 +144,7 @@ public class VideoProvider {
                 // Make the current method happy
                 String studio = "";
                 mediaList.add(buildMediaInfo(title, studio, artist, videoUrl, thumbnailUrl,
-                        thumbnailUrl));
+                        imageUrl));
             }
         }
         return mediaList;
@@ -164,8 +166,11 @@ public class VideoProvider {
                     if (i == LAST_ITEM_IDX) {
                         result.append("and " + artist);
                     } else {
-                        // it's a preeceding item
-                        result.append(artist + ", ");
+                        result.append(artist);
+                        // it's a preeceding item. Append a comma if have more than 2 items
+                        if (artists.length() > 2) {
+                            result.append( ", ");
+                        }
                     }
                 } else {
                     // only have 1 artist for song.
