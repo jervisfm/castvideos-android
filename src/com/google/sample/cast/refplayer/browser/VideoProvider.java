@@ -54,14 +54,7 @@ public class VideoProvider {
     private static String TAG_ARTISTS = "artists";
     private static String TAG_ARTIST_NAME = "name";
 
-    private static String TAG_CATEGORIES = "categories";
-    private static String TAG_NAME = "name";
-    private static String TAG_STUDIO = "studio";
-    private static String TAG_SOURCES = "sources";
-    private static String TAG_SUBTITLE = "subtitle";
-    private static String TAG_THUMB = "image-480x270"; // "thumb";
-    private static String TAG_IMG_780_1200 = "image-780x1200";
-
+    private static final int MAX_VIDEOS = 200;
 
     private static List<MediaInfo> mediaList;
 
@@ -107,8 +100,8 @@ public class VideoProvider {
         }
 
         String url = String.format(VIDEO_URL_TEMPLATE, vid.toUpperCase(), vid.toLowerCase());
-        Log.d(TAG, "Would have requested URL: " + url);
-        return "http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4";
+        Log.d(TAG, "Requesting URL: " + url);
+        return url;
     }
 
     /**
@@ -127,7 +120,7 @@ public class VideoProvider {
         JSONObject jsonObj = new VideoProvider().parseUrl(url);
 
         JSONArray videos = jsonObj.getJSONArray(TAG_VIDEOS);
-        final int MAX_VIDEOS = 10;
+
         if (videos != null) {
             for (int i  = 0; i < videos.length(); ++i) {
                 // TODO(jervis): DELETE ME!!
@@ -144,12 +137,7 @@ public class VideoProvider {
                 String title = video.getString(TAG_TITLE);
 
                 // Get the Artist
-                String artist = "";
-                JSONArray artists = video.getJSONArray(TAG_ARTISTS);
-                if (artists != null && artists.length() > 0) {
-                    artist = artists.getJSONObject(0).getString(TAG_ARTIST_NAME);
-                    artist = artist == null ? "" : artist;
-                }
+                String artist = getArtist(video);
 
                 // Make the current method happy
                 String studio = "";
@@ -157,36 +145,35 @@ public class VideoProvider {
                         thumbnailUrl));
             }
         }
+        return mediaList;
+    }
 
-        /*JSONArray categories = jsonObj.getJSONArray(TAG_CATEGORIES);
-        if (null != categories) {
-            for (int i = 0; i < categories.length(); i++) {
-                JSONObject category = categories.getJSONObject(i);
-                category.getString(TAG_NAME);
-                JSONArray videos = category.getJSONArray(getJsonMediaTag());
-                if (null != videos) {
-                    for (int j = 0; j < videos.length(); j++) {
-                        JSONObject video = videos.getJSONObject(j);
-                        String subTitle = video.getString(TAG_SUBTITLE);
-                        JSONArray videoUrls = video.getJSONArray(TAG_SOURCES);
-                        if (null == videoUrls || videoUrls.length() == 0) {
-                            continue;
-                        }
-                        String videoUrl = videoUrls.getString(0);
-                        String imageurl = getThumbPrefix() + video.getString(TAG_THUMB);
-                        String bigImageurl = getThumbPrefix() + video.getString(TAG_IMG_780_1200);
-                        bigImageurl = "";
-                        imageurl = "";
-                        String title = video.getString(TAG_TITLE);
-                        //title = "klm";
-                        String studio = video.getString(TAG_STUDIO);
-                        mediaList.add(buildMediaInfo(title, studio, subTitle, videoUrl, imageurl,
-                                bigImageurl));
+    private static String getArtist(JSONObject video) throws JSONException{
+        StringBuilder result = new StringBuilder();
+        if (video == null) {
+            return result.toString();
+        }
+        JSONArray artists = video.getJSONArray(TAG_ARTISTS);
+        final int LAST_ITEM_IDX = artists.length() - 1;
+        final boolean multipleArtists = artists.length() > 1;
+        for (int i = 0; i < artists.length(); ++i) {
+            JSONObject artistObj = artists.getJSONObject(i);
+            String artist = artistObj.getString(TAG_ARTIST_NAME);
+            if (artist != null) {
+                if (multipleArtists) {
+                    if (i == LAST_ITEM_IDX) {
+                        result.append("and " + artist);
+                    } else {
+                        // it's a preeceding item
+                        result.append(artist + ", ");
                     }
+                } else {
+                    // only have 1 artist for song.
+                    result.append(artist);
                 }
             }
-        }*/
-        return mediaList;
+        }
+        return result.toString();
     }
 
     private static MediaInfo buildMediaInfo(String title,
