@@ -42,6 +42,18 @@ public class VideoProvider {
     private static String TAG_MEDIA = "videos";
     private static String THUMB_PREFIX_URL =
             "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/";
+
+
+    private static String VIDEO_URL_TEMPLATE =
+            "http://h264-aws.vevo.com/v3/h264/%s/%s_high_1280x720_h264_2000_aac_128.mp4";
+    private static String TAG_VIDEOS = "videos";
+    private static String TAG_VIDEO_ID = "isrc";
+    private static String TAG_TITLE = "title";
+    private static String TAG_RELEASE_DATE = "releaseDate";
+    private static String TAG_THUMBNAIL = "thumbnailUrl";
+    private static String TAG_ARTISTS = "artists";
+    private static String TAG_ARTIST_NAME = "name";
+
     private static String TAG_CATEGORIES = "categories";
     private static String TAG_NAME = "name";
     private static String TAG_STUDIO = "studio";
@@ -49,7 +61,7 @@ public class VideoProvider {
     private static String TAG_SUBTITLE = "subtitle";
     private static String TAG_THUMB = "image-480x270"; // "thumb";
     private static String TAG_IMG_780_1200 = "image-780x1200";
-    private static String TAG_TITLE = "title";
+
 
     private static List<MediaInfo> mediaList;
 
@@ -82,6 +94,30 @@ public class VideoProvider {
         }
     }
 
+    /**
+     * Given a unique video identifier, returns a URL at to which video can
+     * be played.
+     * @param vid
+     * @return
+     */
+    public static String getVideoURL(String vid) {
+
+        if (vid == null || vid.length() == 0) {
+            return "";
+        }
+
+        String url = String.format(VIDEO_URL_TEMPLATE, vid.toUpperCase(), vid.toLowerCase());
+        Log.d(TAG, "Would have requested URL: " + url);
+        return "http://www.quirksmode.org/html5/videos/big_buck_bunny.mp4";
+    }
+
+    /**
+     * Builds a list of MediaInfo objects given a URL that points to a JSON listing
+     * of videos.
+     * @param url - url to json file
+     * @return
+     * @throws JSONException
+     */
     public static List<MediaInfo> buildMedia(String url) throws JSONException {
 
         if (null != mediaList) {
@@ -89,7 +125,40 @@ public class VideoProvider {
         }
         mediaList = new ArrayList<MediaInfo>();
         JSONObject jsonObj = new VideoProvider().parseUrl(url);
-        JSONArray categories = jsonObj.getJSONArray(TAG_CATEGORIES);
+
+        JSONArray videos = jsonObj.getJSONArray(TAG_VIDEOS);
+        final int MAX_VIDEOS = 10;
+        if (videos != null) {
+            for (int i  = 0; i < videos.length(); ++i) {
+                // TODO(jervis): DELETE ME!!
+                if (i > MAX_VIDEOS) break;
+
+                JSONObject video = videos.getJSONObject(i);
+                String vid = video.getString(TAG_VIDEO_ID);
+                if (vid == null || vid.length() == 0)  {
+                    continue;
+                }
+                String releaseDateString = video.getString(TAG_RELEASE_DATE);
+                String thumbnailUrl = video.getString(TAG_THUMBNAIL);
+                String videoUrl = getVideoURL(vid);
+                String title = video.getString(TAG_TITLE);
+
+                // Get the Artist
+                String artist = "";
+                JSONArray artists = video.getJSONArray(TAG_ARTISTS);
+                if (artists != null && artists.length() > 0) {
+                    artist = artists.getJSONObject(0).getString(TAG_ARTIST_NAME);
+                    artist = artist == null ? "" : artist;
+                }
+
+                // Make the current method happy
+                String studio = "";
+                mediaList.add(buildMediaInfo(title, studio, artist, videoUrl, thumbnailUrl,
+                        thumbnailUrl));
+            }
+        }
+
+        /*JSONArray categories = jsonObj.getJSONArray(TAG_CATEGORIES);
         if (null != categories) {
             for (int i = 0; i < categories.length(); i++) {
                 JSONObject category = categories.getJSONObject(i);
@@ -106,14 +175,17 @@ public class VideoProvider {
                         String videoUrl = videoUrls.getString(0);
                         String imageurl = getThumbPrefix() + video.getString(TAG_THUMB);
                         String bigImageurl = getThumbPrefix() + video.getString(TAG_IMG_780_1200);
+                        bigImageurl = "";
+                        imageurl = "";
                         String title = video.getString(TAG_TITLE);
+                        //title = "klm";
                         String studio = video.getString(TAG_STUDIO);
                         mediaList.add(buildMediaInfo(title, studio, subTitle, videoUrl, imageurl,
                                 bigImageurl));
                     }
                 }
             }
-        }
+        }*/
         return mediaList;
     }
 
