@@ -99,7 +99,7 @@ public class VideoProvider {
             return "";
         }
 
-        String url = String.format(VIDEO_URL_TEMPLATE, vid.toUpperCase(), vid.toLowerCase());
+        String url = String.format("http://ovevmedia.appspot.com/v/%s", vid.toLowerCase());
         Log.d(TAG, "Requesting URL: " + url);
         return url;
     }
